@@ -13,8 +13,6 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
  && php composer.phar install --no-dev --optimize-autoloader \
  && rm composer-setup.php
 
-RUN php artisan key:generate || true
-
 EXPOSE 8080
 
 CMD php artisan serve --host=0.0.0.0 --port=${PORT}
