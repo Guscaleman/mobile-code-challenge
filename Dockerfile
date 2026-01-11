@@ -1,31 +1,20 @@
-FROM php:8.2-fpm
-
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libsqlite3-dev \
-    libpq-dev \
-    && docker-php-ext-install \
-        pdo \
-        pdo_mysql \
-        pdo_pgsql \
-        pdo_sqlite \
-        zip
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+FROM php:8.2-cli
 
 WORKDIR /var/www
+
+RUN apt-get update && apt-get install -y \
+    git unzip libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
+
 COPY . .
 
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 storage bootstrap/cache
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+ && php composer-setup.php \
+ && php composer.phar install --no-dev --optimize-autoloader \
+ && rm composer-setup.php
 
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+RUN php artisan key:generate || true
 
-EXPOSE 8000
+EXPOSE 8080
 
 CMD php artisan serve --host=0.0.0.0 --port=${PORT}
-
